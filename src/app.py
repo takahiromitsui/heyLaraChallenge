@@ -1,8 +1,8 @@
 import chainlit as cl
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import JsonOutputParser
-from langchain.schema import StrOutputParser
-from langchain.prompts import PromptTemplate
+from langchain.output_parsers import PydanticOutputParser
+from langchain.prompts import ChatPromptTemplate
 
 # local
 # from prompt import prompt
@@ -19,16 +19,25 @@ async def on_chat_start():
 @cl.on_message
 async def on_message(message: cl.Message):
     model = ChatOpenAI(streaming=True, temperature=0)
-    parser = JsonOutputParser(pydantic_model=Invoice)
-    prompt = PromptTemplate(
-        template="Answer the user query.\n{format_instructions}\n{query}\n",
-        input_variables=["query"],
-        partial_variables={"format_instructions": parser.get_format_instructions()},
-    )
-    chain = prompt | model | parser
+    # parser = JsonOutputParser(pydantic_model=Invoice)
+    pydantic_parser = PydanticOutputParser(pydantic_object=Invoice)
+    format_instructions = pydantic_parser.get_format_instructions()
+
+    template_string = """
+    You are creating an invoice. 
+    Please fill in the following fields based on user query and the format instructions below.
+    {format_instructions}
+    {query}
+    But, do not make up any information. If you don't know the answer, just fill null.
+    Return the invoice as a JSON object.
+    """
+    prompt = ChatPromptTemplate.from_template(template=template_string)
+    chain = prompt | model | JsonOutputParser(pydantic_model=Invoice)
     result = chain.invoke(
         {
             "query": message.content,
+            "format_instructions": format_instructions,
         }
     )
+    # print(result)
     await cl.Message(content=result).send()
