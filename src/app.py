@@ -2,9 +2,10 @@ import chainlit as cl
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.schema import StrOutputParser
+from langchain.prompts import PromptTemplate
 
 # local
-from prompt import prompt
+# from prompt import prompt
 from schema import Invoice
 
 
@@ -17,13 +18,17 @@ async def on_chat_start():
 
 @cl.on_message
 async def on_message(message: cl.Message):
-    model = ChatOpenAI(streaming=True)
+    model = ChatOpenAI(streaming=True, temperature=0)
     parser = JsonOutputParser(pydantic_model=Invoice)
-    chain = prompt | model | StrOutputParser()
+    prompt = PromptTemplate(
+        template="Answer the user query.\n{format_instructions}\n{query}\n",
+        input_variables=["query"],
+        partial_variables={"format_instructions": parser.get_format_instructions()},
+    )
+    chain = prompt | model | parser
     result = chain.invoke(
         {
-            "question": message.content,
-            "format_instructions": parser.get_format_instructions(),
+            "query": message.content,
         }
     )
     await cl.Message(content=result).send()
