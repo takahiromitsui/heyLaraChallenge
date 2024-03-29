@@ -11,6 +11,7 @@ from schema import Invoice
 
 @cl.on_chat_start
 async def on_chat_start():
+    cl.user_session.set("invoice", Invoice())
     await cl.Message(
         content="Hello, I'm your virtual assistant Lara and I do the bookkeeping for you. Should I write an invoice or post an incoming or outgoing invoice?"
     ).send()
@@ -22,6 +23,7 @@ async def on_message(message: cl.Message):
     # parser = JsonOutputParser(pydantic_model=Invoice)
     pydantic_parser = PydanticOutputParser(pydantic_object=Invoice)
     format_instructions = pydantic_parser.get_format_instructions()
+    previous_invoice = cl.user_session.get("invoice")
 
     template_string = """
     You are creating an invoice. 
@@ -29,6 +31,8 @@ async def on_message(message: cl.Message):
     {format_instructions}
     {query}
     But, do not make up any information. If you don't know the answer, just fill null.
+    But if there is a previous invoice in the session, update the fields with the new information.
+    {previous_invoice}
     Return the invoice as a JSON object.
     """
     prompt = ChatPromptTemplate.from_template(template=template_string)
@@ -37,7 +41,9 @@ async def on_message(message: cl.Message):
         {
             "query": message.content,
             "format_instructions": format_instructions,
+            "previous_invoice": previous_invoice,
         }
     )
+    cl.user_session.set("invoice", result)
     # print(result)
     await cl.Message(content=result).send()
