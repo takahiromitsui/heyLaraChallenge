@@ -19,6 +19,11 @@ async def on_chat_start():
 
 @cl.on_message
 async def on_message(message: cl.Message):
+    if "pdf" in message.content.lower():
+        # Generate PDF
+        await cl.Message(content="Sorry, this feature is not implemented yet.").send()
+        return
+
     model = ChatOpenAI(streaming=True, temperature=0)
     # parser = JsonOutputParser(pydantic_model=Invoice)
     pydantic_parser = PydanticOutputParser(pydantic_object=Invoice)
@@ -30,7 +35,7 @@ async def on_message(message: cl.Message):
     Please fill in the following fields based on user query and the format instructions below.
     {format_instructions}
     {query}
-    But, do not make up any information. If you don't know the answer, just fill null.
+    But, do not make up any information. If you don't know the answer, just fill in 'null' .
     But if there is a previous invoice in the session, update the fields with the new information.
     {previous_invoice}
     Return the invoice as a JSON object.
