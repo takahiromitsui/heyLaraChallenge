@@ -10,7 +10,7 @@ I created a chatbot that fills a JSON-structure based on a conversation with a u
 
 ## Environment Variables
 
-To run this project, you will need to add the following environment variables to your .env file (see .env.example).
+To run this project, you must add the following environment variables to your .env file (see .env.example).
 
 Chainlit automatically loads env variables. Therefore, I did not have to add `python-dotenv` (see src/main.py).
 
@@ -37,14 +37,14 @@ Once you have installed the prerequisites:
   # Install all packages
   $ poetry install
   # Run application
-  # poetry run chainlit run src/app.py -w
+  $ poetry run chainlit run src/app.py -w
 ```
 
 
 ## Folder Structure
 
     ├── src                     
-        ├── app.py.   # I created life cycles for chainlit. Also, added logic for user input to GPT-3 and output processing.GPT3.                
+        ├── app.py.   # I created life cycles for Chainlit. Also, I added logic to connect GPT3 and to process data.              
         ├── schema.py # I defined pydantic schemas for JSON.
     └── pyproject.toml # All dependecies
 
